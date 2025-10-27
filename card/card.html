@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cards - Compras Futuras</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Supabase Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="style_cards.css">
+</head>
+<body>
+    <!-- Background decorativo -->
+    <div class="background-shapes">
+        <div class="shape shape-1"></div>
+        <div class="shape shape-2"></div>
+        <div class="shape shape-3"></div>
+        <div class="floating-dots">
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Header com informações do usuário -->
+        <header class="header">
+            <div class="user-info">
+                <!-- Avatar clicável para abrir modal -->
+                <div class="user-avatar" id="userAvatarContainer">
+                    <img id="userPhoto" src="" alt="Foto do usuário" class="user-photo">
+                    <div class="status-indicator"></div>
+                    <!-- Ícone de edição no hover -->
+                    <div class="avatar-edit-overlay">
+                        <i class="fas fa-camera"></i>
+                    </div>
+                </div>
+                <div class="user-details">
+                    <span id="userName" class="user-name">Carregando...</span>
+                </div>
+            </div>
+            <div class="header-actions">
+                <button id="logoutBtn" class="btn btn-logout">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span class="btn-logout-text">Sair</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Container dos cards -->
+        <div class="cards-container" id="cardsContainer">
+            <!-- Botão para adicionar novo card -->
+            <div class="card add-card" id="addCardBtn">
+                <div class="add-card-content">
+                    <div class="add-icon">
+                        <i class="fas fa-plus"></i>
+                    </div>
+                    <h3>Criar Novo Card</h3>
+                    <p>Adicione uma nova lista de compras</p>
+                </div>
+            </div>
+            
+            <!-- Cards serão inseridos dinamicamente aqui pelo JavaScript -->
+        </div>
+    </div>
+
+    <!-- MODAL DE AVATAR -->
+    <div class="modal" id="avatarModal">
+        <div class="modal-content avatar-modal">
+            <div class="modal-header">
+                <div class="modal-title-section">
+                    <h2>
+                        <i class="fas fa-user-circle"></i>
+                        Imagem de Perfil
+                    </h2>
+                    <p>Personalize sua foto de perfil</p>
+                </div>
+                <button class="close-btn" id="closeAvatarModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <!-- Preview do avatar atual -->
+                <div class="avatar-preview-container">
+                    <div class="avatar-preview" id="avatarPreview">
+                        <img id="avatarPreviewImage" src="" alt="Avatar Preview">
+                        <div class="avatar-placeholder" id="avatarPlaceholder">
+                            <i class="fas fa-user"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Opções de ação -->
+                <div class="avatar-actions">
+                    <!-- Input de arquivo (oculto) -->
+                    <input type="file" id="avatarFileInput" accept="image/*" style="display: none;">
+                    
+                    <!-- Botão de upload -->
+                    <button class="btn btn-primary btn-avatar-action" id="uploadAvatarBtn">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        Fazer Upload
+                    </button>
+                    
+                    <!-- Botão de remover -->
+                    <button class="btn btn-danger btn-avatar-action" id="removeAvatarBtn">
+                        <i class="fas fa-trash-alt"></i>
+                        Remover Imagem
+                    </button>
+                </div>
+
+                <!-- Mensagem de ajuda -->
+                <div class="avatar-help">
+                    <i class="fas fa-info-circle"></i>
+                    <span>Formatos aceitos: JPG, PNG, GIF • Tamanho máximo: 5MB</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE CONFIRMAÇÃO PARA REMOVER AVATAR -->
+    <div class="modal" id="confirmRemoveAvatarModal">
+        <div class="modal-content confirm-modal">
+            <div class="modal-header">
+                <div class="modal-title-section">
+                    <h2>
+                        <i class="fas fa-exclamation-triangle"></i>
+                        Remover Imagem de Perfil
+                    </h2>
+                    <p>Esta ação removerá sua foto de perfil</p>
+                </div>
+            </div>
+            <div class="modal-body">
+                <div class="warning-content">
+                    <div class="warning-icon">
+                        <i class="fas fa-user-slash"></i>
+                    </div>
+                    <p>Tem certeza que deseja remover sua imagem de perfil?</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" id="cancelRemoveAvatarBtn">
+                    <i class="fas fa-times"></i>
+                    Cancelar
+                </button>
+                <button type="button" class="btn btn-danger" id="confirmRemoveAvatarBtn">
+                    <i class="fas fa-trash"></i>
+                    Remover Imagem
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para criar/editar card -->
+    <div class="modal" id="cardModal">
+        <div class="modal-content scrollable-modal">
+            <div class="modal-header">
+                <div class="modal-title-section">
+                    <h2 id="modalTitle">
+                        <i class="fas fa-plus-circle"></i>
+                        Novo Card
+                    </h2>
+                    <p>Preencha as informações do seu card</p>
+                </div>
+                <button class="close-btn" id="closeModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body scrollable-content">
+                <form id="cardForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="cardName">
+                                <i class="fas fa-tag"></i>
+                                Nome do Card
+                            </label>
+                            <input type="text" id="cardName" name="cardName" required placeholder="Ex: Compras do Mês">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="cardImage">
+                            <i class="fas fa-image"></i>
+                            Imagem do Card
+                        </label>
+                        <div class="image-upload-container">
+                            <input type="file" id="cardImage" name="cardImage" accept="image/*" class="image-input">
+                            <div class="image-preview" id="imagePreview">
+                                <button type="button" class="remove-image-btn" id="removeImageBtn" title="Remover imagem">
+                                    ×
+                                </button>
+                                <img id="previewImage" src="" alt="Preview">
+                                <div class="upload-placeholder" id="uploadPlaceholder">
+                                    <div class="upload-icon">
+                                        <i class="fas fa-cloud-upload-alt"></i>
+                                    </div>
+                                    <span>Clique para selecionar uma imagem</span>
+                                    <small>JPG, PNG, GIF - Máximo 5MB</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="cardDescription">
+                            <i class="fas fa-align-left"></i>
+                            Descrição (opcional)
+                        </label>
+                        <textarea id="cardDescription" name="cardDescription" placeholder="Descreva o que você planeja comprar..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" id="cancelBtn">
+                    <i class="fas fa-times"></i>
+                    Cancelar
+                </button>
+                <button type="submit" form="cardForm" class="btn btn-primary" id="saveCardBtn">
+                    <span class="btn-content">
+                        <i class="fas fa-save"></i>
+                        <span class="btn-text">Salvar Card</span>
+                    </span>
+                    <span class="btn-loading">
+                        <span class="loading-spinner-small"></span>
+                        Salvando...
+                    </span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de confirmação para exclusão -->
+    <div class="modal" id="confirmModal">
+        <div class="modal-content confirm-modal">
+            <div class="modal-header">
+                <div class="modal-title-section">
+                    <h2>
+                        <i class="fas fa-exclamation-triangle"></i>
+                        Confirmar Exclusão
+                    </h2>
+                    <p>Esta ação não pode ser desfeita</p>
+                </div>
+            </div>
+            <div class="modal-body">
+                <div class="warning-content">
+                    <div class="warning-icon">
+                        <i class="fas fa-trash-alt"></i>
+                    </div>
+                    <p>Tem certeza que deseja excluir este card permanentemente?</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" id="confirmCancelBtn">
+                    <i class="fas fa-times"></i>
+                    Cancelar
+                </button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">
+                    <i class="fas fa-trash"></i>
+                    Excluir Card
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-content">
+            <div class="loading-spinner"></div>
+            <h3>Carregando...</h3>
+            <p>Conectando com Supabase</p>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script type="module" src="cards.js"></script>
+</body>
+</html>

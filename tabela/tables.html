@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciar Produtos - Supabase</title>
+    
+    <!-- ✅ CSS UNIFICADO (substitui tables_part1.css e tables_part2.css) -->
+    <link rel="stylesheet" href="tables.css">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- ⚠️ IMPORTANTE: Supabase Client Library -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <!-- Header -->
+    <header class="table-header">
+        <div class="header-content">
+            <div class="header-left">
+                <button id="backBtn" class="btn-back" title="Voltar">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M19 12H5M12 19L5 12L12 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    Voltar
+                </button>
+                <div class="header-info">
+                    <!-- ✅ CORRIGIDO: Título dinâmico com nome do card -->
+                    <h1 id="cardTitle">Gerenciador de Produtos</h1>
+                    <p id="cardSubtitle">Gerencie seus produtos com Supabase</p>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Container principal -->
+    <main class="table-main">
+        <div class="table-container">
+            <!-- ✅ PARTE 1: Toolbar com novo layout responsivo -->
+            <div class="table-toolbar">
+                <!-- Esquerda: Novo produto -->
+                <div class="toolbar-left">
+                    <button id="addProductBtn" class="btn btn-primary">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 5V19M5 12H19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        Novo Produto
+                    </button>
+                </div>
+                
+                <!-- Centro: Busca e filtros -->
+                <div class="toolbar-center">
+                    <div class="search-box">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2"/>
+                            <path d="m21 21-4.35-4.35" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        <input type="text" id="searchInput" placeholder="Buscar produtos...">
+                    </div>
+                    <div class="filter-group">
+                        <select id="categoryFilter" class="filter-select">
+                            <option value="">Todas as categorias</option>
+                        </select>
+                        <select id="importanceFilter" class="filter-select">
+                            <option value="">Todas as importâncias</option>
+                            <option value="Luxo">💎 Luxo</option>
+                            <option value="Importante">🔴 Importante</option>
+                            <option value="Essencial">⭐ Essencial</option>
+                            <option value="Futuro">⏳ Futuro</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- Direita: Produtos e Total -->
+                <div class="toolbar-right">
+                    <div class="total-info">
+                        <div class="total-products">
+                            <span class="total-label">Produtos:</span>
+                            <span id="totalProducts" class="total-value">0</span>
+                        </div>
+                        <div class="total-value-box">
+                            <span class="total-label">Total:</span>
+                            <span id="totalValue" class="total-value">R$ 0,00</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ✅ PARTE 2: Tabela de produtos (responsiva com coluna de ações visível) -->
+            <div class="table-wrapper">
+                <table id="productsTable" class="products-table">
+                    <thead>
+                        <tr id="tableHeader">
+                            <!-- Colunas serão inseridas dinamicamente -->
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                        <!-- Produtos serão inseridos dinamicamente -->
+                    </tbody>
+                </table>
+                
+                <div id="emptyState" class="empty-state">
+                    <div class="empty-icon">
+                        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M20 7L12 3L4 7M20 7L12 11M20 7V17L12 21M4 7L12 11M4 7V17L12 21M12 11V21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                    <h3>Nenhum produto encontrado</h3>
+                    <p>Adicione seu primeiro produto clicando no botão "Novo Produto"</p>
+                </div>
+            </div>
+
+            <!-- ✅ PARTE 3: Footer com frete, subtotal e total (sincronizado com localStorage) -->
+            <div class="table-footer">
+                <div class="footer-left">
+                    <div class="shipping-box">
+                        <label for="shippingCost">Frete:</label>
+                        <!-- ✅ CORRIGIDO: Frete agora é salvo no localStorage por card -->
+                        <input type="number" id="shippingCost" step="0.01" min="0" placeholder="0,00" class="shipping-input">
+                    </div>
+                </div>
+                <div class="footer-right">
+                    <div class="total-summary">
+                        <div class="total-line">
+                            <span>Subtotal:</span>
+                            <span id="subtotalValue">R$ 0,00</span>
+                        </div>
+                        <div class="total-line">
+                            <span>Frete:</span>
+                            <span id="shippingValue">R$ 0,00</span>
+                        </div>
+                        <div class="total-line total-final">
+                            <span>Total Geral:</span>
+                            <span id="grandTotal">R$ 0,00</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal para adicionar/editar produto -->
+    <div id="productModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="productModalTitle">Novo Produto</h2>
+                <button id="closeProductModal" class="close-btn">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </button>
+            </div>
+            <form id="productForm" class="modal-body">
+                <div class="form-grid" id="productFormGrid">
+                    <!-- Campos serão inseridos dinamicamente -->
+                </div>
+                <div class="form-actions">
+                    <button type="button" id="cancelProductBtn" class="btn btn-secondary">Cancelar</button>
+                    <button type="submit" id="saveProductBtn" class="btn btn-primary">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal de confirmação -->
+    <div id="confirmModal" class="modal">
+        <div class="modal-content modal-small">
+            <div class="modal-header">
+                <h2 id="confirmTitle">Confirmar Exclusão</h2>
+                <button id="confirmCloseBtn" class="close-btn">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p id="confirmMessage" style="color: #cbd5e1; font-size: 1rem; line-height: 1.6; margin: 0;">
+                    Tem certeza que deseja excluir este item?
+                </p>
+            </div>
+            <div class="form-actions" style="padding: 0 2rem 2rem 2rem; margin: 0; border: none;">
+                <button id="confirmCancelBtn" class="btn btn-secondary">Cancelar</button>
+                <button id="confirmDeleteBtn" class="btn btn-danger">Excluir</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading overlay -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="loading-spinner">
+            <div class="spinner"></div>
+            <p>Carregando...</p>
+        </div>
+    </div>
+
+    <!-- 
+        ============================================
+        SCRIPTS - ORDEM CORRETA PARA SUPABASE
+        ============================================
+        1. Supabase Client (já carregado no <head>)
+        2. supabase.js (funções de API - na raiz)
+        3. tables-unified.js (lógica principal)
+    -->
+    
+    <!-- Carregar módulo supabase.js da raiz como ES6 Module -->
+    <script type="module" src="../supabase.js"></script>
+    
+    <!-- Carregar tables-unified.js local como ES6 Module -->
+    <script type="module" src="tables-unified.js"></script>
+</body>
+</html>
